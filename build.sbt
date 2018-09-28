@@ -19,7 +19,7 @@ import sbt.Keys.resolvers
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import Versions._
 
-val isStaging = System.env.getOrElse("DEPLOY_ENV", "test")
+val isStaging = sys.env.getOrElse("DEPLOY_ENV", "test")
 
 organization := "it.gov.daf"
 
@@ -99,6 +99,5 @@ publishMavenStyle := true
 
 autoAPIMappings := true
 
-def credential = Credentials { Path.userHome / ".ivy2" / ".credentials" }
-
+   credential += Credentials { Path.userHome / ".ivy2" / ".credentials" }
 // credentials += {if(isStaging) Credentials(Path.userHome / ".ivy2" / ".credentialsTest") else Credentials(Path.userHome / ".ivy2" / ".credentials")}
