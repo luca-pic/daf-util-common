@@ -15,10 +15,10 @@
  */
 
 import Versions._
-import sbt.Keys.resolvers
+// import sbt.Keys.resolvers
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
-val isStaging = System.getProperty("STAGING") != null
+val isStaging = sys.env.getOrElse("DEPLOY_ENV", "test") == "test"
 
 organization := "it.gov.daf"
 
@@ -26,9 +26,7 @@ name := "common"
 
 Seq(gitStampSettings: _*)
 
-version in ThisBuild := sys.env.getOrElse("COMMON_VERSION", "1.0.9")
-
-//version := "1.0.1-SNAPSHOT"
+// version in ThisBuild := sys.env.getOrElse("COMMON_VERSION", "1.0.9")
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -100,4 +98,5 @@ publishMavenStyle := true
 
 autoAPIMappings := true
 
-credentials += {if(isStaging) Credentials(Path.userHome / ".ivy2" / ".credentialsTest") else Credentials(Path.userHome / ".ivy2" / ".credentials")}
+credentials += Credentials { Path.userHome / ".ivy2" / ".credentials" }
+// credentials += {if(isStaging) Credentials(Path.userHome / ".ivy2" / ".credentialsTest") else Credentials(Path.userHome / ".ivy2" / ".credentials")}

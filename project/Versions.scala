@@ -1,7 +1,9 @@
 object Versions {
 
+  lazy val defaultVersion = "1.0.9-SNAPSHOT"
+
   val hadoopVersion = "2.6.0-cdh5.12.0"
-  
+
   val playVersion = "2.5.14"
 
   val playPac4jVersion = "3.0.0"
@@ -11,4 +13,5 @@ object Versions {
   val catsVersion = "0.9.0"
 
   val catsEffectVersion = "1.0.0-RC"
+
 }
