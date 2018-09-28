@@ -5,7 +5,7 @@ pipeline {
         stage('Test') {
             when { not { branch 'master' } }
             environment {
-                STAGING = 'true'
+                DEPLOY_ENV = 'test'
             }
             steps {
                 slackSend (message: "BUILD START: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' CHECK THE RESULT ON: https://cd.daf.teamdigitale.it/blue/organizations/jenkins/daf-util-common/activity")
@@ -18,6 +18,9 @@ pipeline {
         stage('Production') {
             when { branch 'master'}
             agent { label 'prod' }
+            environment {
+                DEPLOY_ENV = 'prod'
+            }
             steps {
                 slackSend (message: "BUILD START: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' CHECK THE RESULT ON: https://cd.daf.teamdigitale.it/blue/organizations/jenkinss/daf-util-common/activity")
                 sh 'sbt clean compile'
