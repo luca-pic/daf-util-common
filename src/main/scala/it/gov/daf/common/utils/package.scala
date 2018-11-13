@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 TEAM PER LA TRASFORMAZIONE DIGITALE
+ * Copyright 2017 - 2018 TEAM PER LA TRASFORMAZIONE DIGITALE
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,13 @@ package object utils {
     def apply[A](fa: Try[A]): Future[A] = fa match {
       case Success(a)     => Future.successful(a)
       case Failure(error) => Future.failed[A](error)
+    }
+  }
+
+  implicit val optionFutureNat: (Option ~> Try) = new (Option ~> Try) {
+    def apply[A](fa: Option[A]): Try[A] = fa match {
+      case Some(a) => Success(a)
+      case None    => Failure[A] { new NoSuchElementException }
     }
   }
 

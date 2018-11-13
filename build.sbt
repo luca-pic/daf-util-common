@@ -15,18 +15,14 @@
  */
 
 import Versions._
-// import sbt.Keys.resolvers
+import Environment._
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
-
-val isStaging = sys.env.getOrElse("DEPLOY_ENV", "test") == "test"
 
 organization := "it.gov.daf"
 
 name := "common"
 
 Seq(gitStampSettings: _*)
-
-// version in ThisBuild := sys.env.getOrElse("COMMON_VERSION", "1.0.9")
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -81,13 +77,10 @@ resolvers ++= Seq(
 )
 
 licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt"))
-headerLicense := Some(HeaderLicense.ALv2("2017", "TEAM PER LA TRASFORMAZIONE DIGITALE"))
+headerLicense := Some(HeaderLicense.ALv2("2017 - 2018", "TEAM PER LA TRASFORMAZIONE DIGITALE"))
 headerMappings := headerMappings.value + (HeaderFileType.conf -> HeaderCommentStyle.HashLineComment)
 
 publishTo := {
-  val nexus = if(isStaging) "http://nexus.teamdigitale.test:8081/repository/"
-              else "http://nexus.daf.teamdigitale.it:8081/repository/"
-
   if (isSnapshot.value)
     Some("snapshots" at nexus + "maven-snapshots/")
   else

@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Create Environment.scala file
+      template:
+        src: ../project/Environment.scala.j2
+        dest: ../project/Environment.scala
