@@ -17,9 +17,11 @@
 package it.gov.daf.common.sso.common
 
 import java.io.{PrintWriter, StringWriter}
+
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json._
-import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.libs.ws.{StreamedResponse, WSClient, WSResponse}
+
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import play.api.Logger
@@ -41,9 +43,9 @@ class SecuredInvocationManager @Inject()(loginClient:LoginClient, cacheWrapper: 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 
-  type ServiceFetch = (String, WSClient) => Future[WSResponse]
+  type ServiceFetch[T] = (String, WSClient) => Future[T]
 
-  private def callService(loginInfo:LoginInfo, serviceFetch:ServiceFetch):Future[WSResponse] = {
+  private def callService[T](loginInfo:LoginInfo, serviceFetch:ServiceFetch[T]):Future[T] = {
 
     Logger.logger.debug(s"callService ($loginInfo)")
 
@@ -76,7 +78,7 @@ class SecuredInvocationManager @Inject()(loginClient:LoginClient, cacheWrapper: 
   }
 
   // TODO to replace with the one below
-  def manageRestServiceCall( loginInfo:LoginInfo, serviceFetch:ServiceFetch, acceptableHttpCodes:Int* ) : Future[Either[String,JsValue]] = {
+  def manageRestServiceCall( loginInfo:LoginInfo, serviceFetch:ServiceFetch[WSResponse], acceptableHttpCodes:Int* ) : Future[Either[String,JsValue]] = {
 
     tryManageRestServiceCall ( loginInfo, serviceFetch, acceptableHttpCodes:_* ) map {
       case Success(s) => Right(s.jsValue)
@@ -88,7 +90,7 @@ class SecuredInvocationManager @Inject()(loginClient:LoginClient, cacheWrapper: 
 
   }
 
-  def manageRestServiceCallWithResp( loginInfo:LoginInfo, serviceFetch:ServiceFetch, acceptableHttpCodes:Int* ) : Future[Either[String,RestServiceResponse]] = {
+  def manageRestServiceCallWithResp( loginInfo:LoginInfo, serviceFetch:ServiceFetch[WSResponse], acceptableHttpCodes:Int* ) : Future[Either[String,RestServiceResponse]] = {
 
     tryManageRestServiceCall ( loginInfo, serviceFetch, acceptableHttpCodes:_* ) map {
       case Success(s) => Right(s)
@@ -100,7 +102,7 @@ class SecuredInvocationManager @Inject()(loginClient:LoginClient, cacheWrapper: 
 
   }
 
-  private def tryManageRestServiceCall( loginInfo:LoginInfo, serviceFetch:ServiceFetch, acceptableHttpCodes:Int* ) : Future[Try[RestServiceResponse]] = {
+  private def tryManageRestServiceCall( loginInfo:LoginInfo, serviceFetch:ServiceFetch[WSResponse], acceptableHttpCodes:Int* ) : Future[Try[RestServiceResponse]] = {
 
     manageServiceCall(loginInfo,serviceFetch) map { response =>
       Try{
@@ -117,16 +119,22 @@ class SecuredInvocationManager @Inject()(loginClient:LoginClient, cacheWrapper: 
   }
 
 
-  def manageServiceCall( loginInfo:LoginInfo, serviceFetch:ServiceFetch ) : Future[WSResponse] = {
+  private case class ResponseInfo(status:Int,body:String)
+
+  def manageServiceCall[T]( loginInfo:LoginInfo, serviceFetch:ServiceFetch[T] ) : Future[T] = {
 
     Logger.logger.debug(s"manageServiceCall ($loginInfo)")
 
     callService(loginInfo,serviceFetch) flatMap {response =>
 
-      Logger.logger.debug(s"RESPONSE STATUS(Applicazione:${loginInfo.appName}): ${response.status}")
-      Logger.logger.debug(s"RESPONSE BODY (Applicazione:${loginInfo.appName}) ${response.body}")
+      val responseInfo = response match{
+        case a:WSResponse => ResponseInfo(a.status,a.body)
+        case s:StreamedResponse => ResponseInfo(s.headers.status,"STREAMED BODY")
+      }
+      Logger.logger.debug(s"RESPONSE STATUS(Applicazione:${loginInfo.appName}): ${responseInfo.status}")
+      Logger.logger.debug(s"RESPONSE BODY (Applicazione:${loginInfo.appName}) ${responseInfo.body}")
 
-      if(response.status == 401){
+      if(responseInfo.status == 401){
         Logger.logger.warn("Unauthorized!!")
         cacheWrapper.deleteCookie(loginInfo.appName,loginInfo.user)
         callService(loginInfo,serviceFetch)
@@ -136,6 +144,7 @@ class SecuredInvocationManager @Inject()(loginClient:LoginClient, cacheWrapper: 
     }
 
   }
+
 
 }
 
