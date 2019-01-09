@@ -5,3 +5,4 @@
 /project/Environment.scala
 /ansible/settings.yml
 /ansible/main.retry
+/localConfigs/

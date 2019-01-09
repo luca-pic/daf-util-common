@@ -37,7 +37,7 @@ import scala.util.Try
 )
 object CredentialManager {
 
-  def readBaCredentials( requestHeader:RequestHeader):UserInfoSearch= {
+  def readBaCredentials( requestHeader:RequestHeader):Option[Credentials]= {
 
     val authHeader = requestHeader.headers.get("authorization").get.split(" ")
     val authType = authHeader(0)
@@ -56,17 +56,18 @@ object CredentialManager {
 
       val groups: Array[String] = ldapGroups.map( _.toString().split(",")(0).split("=")(1) )
 
-      Credentials(user, pwd, groups)
+      Some( Credentials(user, pwd, groups) )
     }else
-      Empty()
+      None
 
   }
 
 
-  def readBearerCredentials(requestHeader: RequestHeader):UserInfoSearch= {
+  def readBearerCredentials(requestHeader: RequestHeader):Option[Profile]= {
 
     val authHeader = requestHeader.headers.get("authorization").get.split(" ")
     val authType = authHeader(0)
+    val token = authHeader(1)
 
     if( authType.equalsIgnoreCase("bearer") ) {
 
@@ -80,19 +81,19 @@ object CredentialManager {
       //Logger.logger.info(s"JWT user: $user")
       //Logger.logger.info(s"belonging to groups: ${groups.toList}" )
 
-      Profile(user, groups)
+      Some( Profile(user, token, groups) )
     }else
-      Empty()
+      None
 
   }
 
   def readCredentialFromRequest( requestHeader: RequestHeader ):UserInfo = {
 
     readBearerCredentials(requestHeader) match {
-      case p:Profile => p
-      case e:Empty => readBaCredentials(requestHeader) match{
-        case c:Credentials => c
-        case _ => throw new Exception("Authorization header not found")
+      case Some(profile) => profile
+      case None => readBaCredentials(requestHeader) match{
+        case Some(credentials) => credentials
+        case None => throw new Exception("Authorization header not found")
       }
     }
 
