@@ -51,7 +51,7 @@ class CacheWrapper(cookieTtlMin:Option[Long], credentialTtlMin:Option[Long]) {
 
   def getCookies(appName: String, userName: String): Option[Seq[Cookie]] = sync.get(s"$appName-${userName}multi")
 
-  def getPwd(user:String): Option[String] = sync.get(user)
+  def getCredentials(user:String): Option[String] = sync.get(user)
 
   def putCookie(appName: String, userName: String, cookie: Cookie) = sync.cachingWithTTL(s"$appName-$userName")(cookieTtlMin.get.minutes){cookie}
 
