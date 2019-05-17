@@ -1,6 +1,6 @@
 object Versions {
 
-  lazy val defaultVersion = "1.1.3-SNAPSHOT"
+  lazy val defaultVersion = "1.2.1"
 
   val hadoopVersion = "2.6.0-cdh5.12.0"
 
@@ -13,5 +13,4 @@ object Versions {
   val catsVersion = "0.9.0"
 
   val catsEffectVersion = "1.0.0-RC"
-
 }
